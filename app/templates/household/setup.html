@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block bodyclass %}auth-page{% endblock %}
+{% block header_title %}{{ app_name }}{% endblock %}
+{% block header_actions %}
+<form method="post" action="{{ url_for('auth.logout') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="linkbtn" type="submit">Log out</button>
+</form>
+{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <div class="auth-brand">
+    <h2>Hi {{ current_user.display_name }} 👋</h2>
+    <p class="muted">A household is where your shared lists live. Create one, or join someone else's.</p>
+  </div>
+
+  <form method="post" action="{{ url_for('household.create') }}" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="field">
+      <span>Create a household</span>
+      <input class="input" type="text" name="name" maxlength="80" placeholder="e.g. 12 Maple Street" autofocus>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">Create household</button>
+  </form>
+
+  <div class="divider"><span>or</span></div>
+
+  <form method="post" action="{{ url_for('household.join_form') }}" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="field">
+      <span>Join with an invite</span>
+      <input class="input" type="text" name="code" placeholder="Paste invite link or code" required autocomplete="off" autocapitalize="off">
+    </label>
+    <button class="btn btn-block" type="submit">Join household</button>
+  </form>
+</div>
+{% endblock %}

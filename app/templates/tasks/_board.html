@@ -1,0 +1,42 @@
+<div class="tabs" role="tablist">
+  {% for key, label in VIEWS.items() %}
+  <a role="tab" class="tab-link {% if view == key %}active{% endif %}" href="{{ url_for('tasks.index', view=key, who=who or none) }}" data-list-url="{{ url_for('tasks.list_partial', view=key, who=who or none) }}" data-view="{{ key }}">
+    {{ label }}{% if key in counts and counts[key] %} <b class="count {% if key == 'overdue' %}count-danger{% endif %}">{{ counts[key] }}</b>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+{% if members|length > 1 or who %}
+<div class="chips who-filter">
+  <a class="chip {% if not who %}active{% endif %}" href="{{ url_for('tasks.index', view=view) }}" data-list-url="{{ url_for('tasks.list_partial', view=view) }}"><span>Everyone</span></a>
+  {% for m in members %}
+  <a class="chip chip-user {% if who == m.id|string %}active{% endif %}" style="--c: {{ m.color }}" href="{{ url_for('tasks.index', view=view, who=m.id) }}" data-list-url="{{ url_for('tasks.list_partial', view=view, who=m.id) }}"><span><i class="dot"></i>{{ 'Me' if m.id == current_user.id else m.display_name }}</span></a>
+  {% endfor %}
+  <a class="chip {% if who == 'unassigned' %}active{% endif %}" href="{{ url_for('tasks.index', view=view, who='unassigned') }}" data-list-url="{{ url_for('tasks.list_partial', view=view, who='unassigned') }}"><span>Unassigned</span></a>
+</div>
+{% endif %}
+
+{% if not tasks %}
+<div class="empty">
+  {% if view == 'done' %}
+  <p>Nothing completed yet.</p>
+  {% elif view == 'overdue' %}
+  <p>🎉 Nothing overdue.</p>
+  {% elif view == 'today' %}
+  <p>Nothing due today. Enjoy it!</p>
+  {% elif view == 'mine' %}
+  <p>Nothing on your plate.</p><p class="muted small">Add a task above or check the <a href="{{ url_for('tasks.index', view='all') }}" data-list-url="{{ url_for('tasks.list_partial', view='all') }}">All</a> list.</p>
+  {% else %}
+  <p>No tasks here.</p><p class="muted small">Type something above and hit Add.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% for label, items in groups %}
+  {% if label %}<h3 class="section-title {% if label == 'Overdue' %}danger{% endif %}">{{ label }}</h3>{% endif %}
+  <ul class="tasklist">
+    {% for t in items %}{% include "tasks/_item.html" %}{% endfor %}
+  </ul>
+{% endfor %}
+
+<span hidden id="board-meta" data-version="{{ household.tasks_version }}" data-due-count="{{ counts.today }}"></span>

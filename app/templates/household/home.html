@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block header_title %}{{ household.name }}{% endblock %}
+{% block content %}
+<section class="card stack">
+  <h2 class="section-heading">Members</h2>
+  <ul class="members">
+    {% for m in household.members %}
+    <li>
+      <span class="avatar avatar-lg" style="--c: {{ m.color }}">{{ m.initials }}</span>
+      <div>
+        <div class="member-name">{{ m.display_name }}{% if m.id == current_user.id %} <span class="muted">(you)</span>{% endif %}</div>
+        <div class="muted small">{{ m.email }}</div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card stack">
+  <h2 class="section-heading">Invite someone</h2>
+  <p class="muted small">Share this link. Anyone who opens it can join your household, so only send it to people you live with.</p>
+  <div class="invite-row">
+    <input class="input" id="invite-url" type="text" value="{{ invite_url }}" readonly onclick="this.select()">
+    <button class="btn btn-primary" type="button" id="copy-invite" data-copy="#invite-url">Copy</button>
+  </div>
+  <div class="row-between">
+    <button class="linkbtn" type="button" id="share-invite" data-share-url="{{ invite_url }}" data-share-title="Join {{ household.name }} on {{ app_name }}" hidden>Share…</button>
+    <form method="post" action="{{ url_for('household.regenerate_invite') }}" data-confirm="Create a new invite link? The current one will stop working.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="linkbtn" type="submit">Reset link</button>
+    </form>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2 class="section-heading">Household name</h2>
+  <form method="post" action="{{ url_for('household.rename') }}" class="invite-row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input class="input" type="text" name="name" value="{{ household.name }}" maxlength="80" required>
+    <button class="btn" type="submit">Save</button>
+  </form>
+</section>
+
+<section class="card stack">
+  <h2 class="section-heading">You</h2>
+  <form method="post" action="{{ url_for('household.account') }}" class="invite-row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="name">
+    <input class="input" type="text" name="display_name" value="{{ current_user.display_name }}" maxlength="40" required aria-label="Display name">
+    <button class="btn" type="submit">Save</button>
+  </form>
+  <details class="details">
+    <summary>Change password</summary>
+    <form method="post" action="{{ url_for('household.account') }}" class="stack" style="margin-top: 10px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="password">
+      <input class="input" type="password" name="current_password" placeholder="Current password" autocomplete="current-password" required>
+      <input class="input" type="password" name="new_password" placeholder="New password (8+ characters)" autocomplete="new-password" minlength="8" required>
+      <button class="btn" type="submit">Update password</button>
+    </form>
+  </details>
+  <form method="post" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-block" type="submit">Log out</button>
+  </form>
+</section>
+
+<section class="card stack danger-zone">
+  <h2 class="section-heading">Leave household</h2>
+  {% if household.members|length > 1 %}
+  <p class="muted small">Tasks assigned to you will become unassigned. The household and its lists stay with the other members.</p>
+  {% else %}
+  <p class="muted small">You're the only member, so leaving will <strong>permanently delete</strong> this household and all of its tasks and shopping items.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('household.leave') }}" data-confirm="{% if household.members|length > 1 %}Leave {{ household.name }}?{% else %}Delete {{ household.name }} and everything in it? This cannot be undone.{% endif %}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm" value="yes">
+    <button class="btn btn-danger btn-block" type="submit">{% if household.members|length > 1 %}Leave household{% else %}Delete household{% endif %}</button>
+  </form>
+</section>
+{% endblock %}

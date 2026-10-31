@@ -1,0 +1,40 @@
+{% if recent %}
+<div class="recent">
+  <span class="recent-label">Add again</span>
+  <div class="chips-scroll">
+    {% for h in recent %}
+    <button type="button" class="chip chip-add" data-name="{{ h.name }}" data-category="{{ h.category }}"><span>+ {{ h.name }}</span></button>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="list-head">
+  <span class="muted">{% if remaining == 0 %}Nothing to buy{% elif remaining == 1 %}1 item to buy{% else %}{{ remaining }} items to buy{% endif %}</span>
+</div>
+
+{% if not active_items %}
+<div class="empty">
+  <p>🛒 The list is empty.</p>
+  <p class="muted small">Add something above — tap a recent item to add it again.</p>
+</div>
+{% endif %}
+
+{% for label, items in groups %}
+  {% if label %}<h3 class="section-title">{{ label }}</h3>{% endif %}
+  <ul class="shoplist">
+    {% for i in items %}{% include "shopping/_item.html" %}{% endfor %}
+  </ul>
+{% endfor %}
+
+{% if checked_items %}
+<div class="list-head basket-head">
+  <span class="muted">In the basket ({{ checked_items|length }})</span>
+  <button type="button" class="linkbtn danger" id="clear-checked" data-count="{{ checked_items|length }}">Clear</button>
+</div>
+<ul class="shoplist checked-list">
+  {% for i in checked_items %}{% include "shopping/_item.html" %}{% endfor %}
+</ul>
+{% endif %}
+
+<span hidden id="board-meta" data-version="{{ household.shopping_version }}" data-remaining="{{ remaining }}"></span>

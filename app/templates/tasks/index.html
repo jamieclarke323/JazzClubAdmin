@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block header_title %}Tasks{% endblock %}
+{% block header_actions %}
+<span class="muted small">{{ today.strftime('%a') }} {{ today.day }} {{ today.strftime('%b') }}</span>
+{% endblock %}
+{% block content %}
+{% from "tasks/_macros.html" import assignee_chips, priority_chips, due_chips, recurrence_select with context %}
+<section class="quickadd card">
+  <form id="quick-add" autocomplete="off">
+    <div class="quickadd-row">
+      <input id="qa-title" name="title" class="input input-lg" type="text" placeholder="Add a task…" maxlength="200" enterkeyhint="done" autocapitalize="sentences" required>
+      <button type="button" id="qa-more" class="iconbtn" aria-label="More options" aria-expanded="false" aria-controls="qa-options">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="11" cy="18" r="2" fill="currentColor"/></svg>
+      </button>
+      <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+    <div id="qa-options" class="qa-options stack" hidden>
+      <div class="field-row"><span class="field-label">Who</span>{{ assignee_chips('assignee_id', members, current_user.id if view == 'mine' else none, 'qa') }}</div>
+      <div class="field-row"><span class="field-label">When</span>{{ due_chips('due_date') }}</div>
+      <div class="field-row"><span class="field-label">Priority</span>{{ priority_chips('priority') }}</div>
+      <div class="field-row two-col">
+        <label class="field compact"><span>Repeat</span>{{ recurrence_select('recurrence') }}</label>
+        <label class="field compact"><span>List</span><input class="input" type="text" name="category" list="category-list" maxlength="40" placeholder="e.g. Home, Finance"></label>
+      </div>
+      <label class="field compact"><span>Notes</span><textarea class="input" name="description" rows="2" maxlength="2000" placeholder="Anything useful…"></textarea></label>
+    </div>
+  </form>
+</section>
+
+<div id="task-board" data-list-url="{{ url_for('tasks.list_partial', view=view, who=who or none) }}" data-version-url="{{ url_for('tasks.version') }}">
+  {% include "tasks/_board.html" %}
+</div>
+
+<datalist id="category-list">
+  {% for c in categories %}<option value="{{ c }}">{% endfor %}
+</datalist>
+
+<dialog id="task-sheet" class="sheet">
+  <form id="task-edit" class="sheet-body stack" method="dialog">
+    <div class="sheet-handle"></div>
+    <input type="hidden" name="id">
+    <input class="input input-lg" type="text" name="title" maxlength="200" required aria-label="Title">
+    <div class="field-row"><span class="field-label">Who</span>{{ assignee_chips('assignee_id', members, none, 'ed') }}</div>
+    <div class="field-row">
+      <span class="field-label">When</span>
+      <div class="invite-row">
+        <input class="input" type="date" name="due_date" aria-label="Due date">
+        <button class="btn btn-ghost" type="button" data-clear="due_date">Clear</button>
+      </div>
+    </div>
+    <div class="field-row"><span class="field-label">Priority</span>{{ priority_chips('priority') }}</div>
+    <div class="field-row two-col">
+      <label class="field compact"><span>Repeat</span>{{ recurrence_select('recurrence') }}</label>
+      <label class="field compact"><span>List</span><input class="input" type="text" name="category" list="category-list" maxlength="40" placeholder="e.g. Home"></label>
+    </div>
+    <label class="field compact"><span>Notes</span><textarea class="input" name="description" rows="3" maxlength="2000"></textarea></label>
+    <div class="sheet-actions">
+      <button class="btn btn-danger btn-ghost" type="button" id="task-delete">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{{ static_url('js/tasks.js') }}"></script>{% endblock %}

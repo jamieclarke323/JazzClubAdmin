@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block header_title %}Shopping{% endblock %}
+{% block header_actions %}
+<button class="linkbtn" type="button" id="group-toggle" aria-pressed="{{ 'true' if grouped else 'false' }}">{{ 'Ungroup' if grouped else 'Group' }}</button>
+{% endblock %}
+{% block content %}
+<section class="quickadd card">
+  <form id="shop-add" autocomplete="off">
+    <div class="quickadd-row">
+      <input id="shop-input" name="name" class="input input-lg" type="text" placeholder="Add item… e.g. Milk x2" maxlength="160" enterkeyhint="done" autocapitalize="sentences" autocomplete="off" required>
+      <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+    <div id="shop-suggest" class="suggest" hidden></div>
+  </form>
+</section>
+
+<div id="shop-board" data-list-url="{{ url_for('shopping.list_partial') }}" data-version-url="{{ url_for('shopping.version') }}">
+  {% include "shopping/_board.html" %}
+</div>
+
+<dialog id="shop-sheet" class="sheet">
+  <form id="shop-edit" class="sheet-body stack" method="dialog">
+    <div class="sheet-handle"></div>
+    <input type="hidden" name="id">
+    <div class="two-col">
+      <label class="field compact grow"><span>Item</span><input class="input" type="text" name="name" maxlength="120" required></label>
+      <label class="field compact qty-field"><span>Qty</span><input class="input" type="text" name="quantity" maxlength="30" placeholder="e.g. 2" inputmode="decimal"></label>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Aisle</span>
+      <div class="chips" role="radiogroup">
+        {% for key, label in SHOPPING_CATEGORIES %}
+        <label class="chip"><input type="radio" name="category" value="{{ key }}"><span>{{ label }}</span></label>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-danger btn-ghost" type="button" id="shop-delete">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>Cancel</button>
+      <button class="btn btn-primary" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{{ static_url('js/shopping.js') }}"></script>{% endblock %}

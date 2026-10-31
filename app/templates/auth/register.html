@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block bodyclass %}auth-page{% endblock %}
+{% block header_title %}{{ app_name }}{% endblock %}
+{% block content %}
+<div class="auth-card card">
+  <div class="auth-brand">
+    <img src="{{ static_url('icons/icon.svg') }}" alt="" width="56" height="56">
+    <h2>Create your account</h2>
+    <p class="muted">{% if session.pending_invite %}You've been invited to a household — one more step.{% else %}Takes about ten seconds.{% endif %}</p>
+  </div>
+  <form method="post" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="field">
+      <span>What should we call you?</span>
+      <input class="input" type="text" name="display_name" value="{{ display_name or '' }}" maxlength="40" autocomplete="given-name" placeholder="e.g. Sam" required autofocus>
+    </label>
+    <label class="field">
+      <span>Email</span>
+      <input class="input" type="email" name="email" value="{{ email or '' }}" autocomplete="email" inputmode="email" required>
+    </label>
+    <label class="field">
+      <span>Password <small class="muted">(8+ characters)</small></span>
+      <input class="input" type="password" name="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">Create account</button>
+  </form>
+  <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block bodyclass %}auth-page{% endblock %}
+{% block header_title %}{{ app_name }}{% endblock %}
+{% block content %}
+<div class="auth-card card center">
+  <h2>You're offline</h2>
+  <p class="muted">{{ app_name }} needs a connection to sync your household's lists. Try again once you're back online.</p>
+  <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+</div>
+{% endblock %}

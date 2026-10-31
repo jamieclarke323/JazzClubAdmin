@@ -1,0 +1,49 @@
+{% macro assignee_chips(name, members, selected, id_prefix) %}
+<div class="chips" role="radiogroup">
+  <label class="chip">
+    <input type="radio" name="{{ name }}" value="" {% if not selected %}checked{% endif %}>
+    <span>Anyone</span>
+  </label>
+  {% for m in members %}
+  <label class="chip chip-user" style="--c: {{ m.color }}">
+    <input type="radio" name="{{ name }}" value="{{ m.id }}" {% if selected == m.id %}checked{% endif %}>
+    <span><i class="dot"></i>{{ m.display_name if m.id != current_user.id else 'Me' }}</span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro priority_chips(name) %}
+<div class="chips" role="radiogroup">
+  {% for value, label in PRIORITIES.items() %}
+  <label class="chip chip-prio prio-{{ value }}">
+    <input type="radio" name="{{ name }}" value="{{ value }}" {% if value == 0 %}checked{% endif %}>
+    <span>{% if value %}<i class="dot"></i>{% endif %}{{ label }}</span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro due_chips(name) %}
+<div class="chips due-chips">
+  <label class="chip"><input type="radio" name="{{ name }}_quick" value="" checked><span>No date</span></label>
+  <label class="chip"><input type="radio" name="{{ name }}_quick" value="today"><span>Today</span></label>
+  <label class="chip"><input type="radio" name="{{ name }}_quick" value="tomorrow"><span>Tomorrow</span></label>
+  <label class="chip"><input type="radio" name="{{ name }}_quick" value="weekend"><span>Weekend</span></label>
+  <label class="chip"><input type="radio" name="{{ name }}_quick" value="nextweek"><span>Next week</span></label>
+  <label class="chip chip-date">
+    <input type="radio" name="{{ name }}_quick" value="custom">
+    <span>Pick…</span>
+    <input type="date" name="{{ name }}" class="date-input" aria-label="Due date">
+  </label>
+</div>
+{% endmacro %}
+
+{% macro recurrence_select(name) %}
+<select name="{{ name }}" class="input select">
+  <option value="">Doesn't repeat</option>
+  {% for key, label in RECURRENCES.items() %}
+  <option value="{{ key }}">{{ label }}</option>
+  {% endfor %}
+</select>
+{% endmacro %}
