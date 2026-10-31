@@ -1,0 +1,30 @@
+<article class="card info-item" data-id="{{ item.id }}" data-item='{{ item.to_dict() | tojson }}' data-search="{{ (item.title ~ ' ' ~ (item.notes or '') ~ ' ' ~ (item.attachments | map(attribute='original_name') | join(' '))) | lower }}">
+  <header class="info-head">
+    <h3 class="info-title">{{ item.title }}</h3>
+    <button class="iconbtn edit" type="button" aria-label="Edit {{ item.title }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    </button>
+  </header>
+  {% if item.notes %}<p class="info-notes">{{ item.notes }}</p>{% endif %}
+  {% if item.attachments %}
+  <div class="thumbs">
+    {% for a in item.attachments %}
+      {% set url = url_for('info.serve_attachment', attachment_id=a.id, name=a.original_name) %}
+      {% if a.is_image %}
+      <button type="button" class="thumb" data-src="{{ url }}" data-name="{{ a.original_name }}" aria-label="View {{ a.original_name }}">
+        <img src="{{ url }}" alt="{{ a.original_name }}" loading="lazy">
+      </button>
+      {% else %}
+      <a class="thumb thumb-doc" href="{{ url }}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>{{ a.original_name }}</span>
+      </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+  <footer class="info-foot muted small">
+    {% if item.created_by %}<span class="avatar avatar-xs" style="--c: {{ item.created_by.color }}">{{ item.created_by.initials }}</span>{% endif %}
+    {{ item.updated_at.day }} {{ item.updated_at.strftime('%b %Y') }}
+  </footer>
+</article>

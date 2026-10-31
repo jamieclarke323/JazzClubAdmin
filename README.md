@@ -25,6 +25,14 @@ Flask hosting without Redis, Celery, Docker, Node or background workers.
 - Optional grouping by aisle (Groceries / Household / Toiletries / Other). Categories are remembered per item.
 - Remaining-item badge on the Shopping tab.
 
+**Info**
+- A shared reference drawer for the stuff you always need to find again: flight details, insurance docs,
+  the wifi password, appliance serial numbers.
+- Each item has a title, optional notes and any number of attached **photos/screenshots or PDFs**.
+- Tap a photo to view it full-screen (and download it); PDFs open in a new tab. Instant search.
+- Files are stored on disk under `instance/uploads/<household>/` with random names and only served to
+  members of that household.
+
 **Household**
 - Register, log in, create a household, invite with a secure link (resettable), rename, change display name /
   password, leave (with safeguards — the last member leaving deletes the household's data).
@@ -111,10 +119,14 @@ Then **Reload** on the Web tab.
 
 ### Backups
 
-The whole database is one file. From a console or a scheduled task:
+The database is one file and uploaded attachments live alongside it. From a console or a scheduled task:
 ```bash
+mkdir -p ~/backups
 cp ~/JazzClubAdmin/instance/household.db ~/backups/household-$(date +%F).db
+tar czf ~/backups/uploads-$(date +%F).tgz -C ~/JazzClubAdmin/instance uploads
 ```
+PythonAnywhere free accounts have a 512 MB disk quota; photos count towards it (a phone screenshot is
+typically 0.5–3 MB). Lower `MAX_UPLOAD_MB` if you want to be stricter.
 
 ### Database migrations (for developers)
 
@@ -135,6 +147,7 @@ app/
   household.py    create, invite, join, members, leave, account
   tasks.py        task views + JSON endpoints, recurrence
   shopping.py     shopping list + suggestions
+  info.py         info items with photo/PDF attachments
   utils.py        dates, recurrence, parsing
   templates/      Jinja templates (HTML-over-the-wire partials for live refresh)
   static/         CSS, vanilla JS, service worker, icons
@@ -155,3 +168,5 @@ run.py            local dev server
 | `APP_NAME` | `Nest` | Name in the header and home-screen icon. |
 | `SESSION_COOKIE_SECURE` | `1` | Cookies only over HTTPS. Use `0` for local http. |
 | `ALLOW_REGISTRATION` | `1` | Allow sign-ups without an invite link. |
+| `UPLOAD_DIR` | `<project>/instance/uploads` | Where Info attachments are stored. |
+| `MAX_UPLOAD_MB` | `20` | Maximum size of a single upload request. |

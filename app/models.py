@@ -32,11 +32,13 @@ class Household(db.Model):
     # Bumped on every change so clients can cheaply poll for updates.
     tasks_version = db.Column(db.Integer, nullable=False, default=0)
     shopping_version = db.Column(db.Integer, nullable=False, default=0)
+    info_version = db.Column(db.Integer, nullable=False, default=0)
 
     members = db.relationship("User", back_populates="household", order_by="User.created_at")
     tasks = db.relationship("Task", back_populates="household", cascade="all, delete-orphan")
     shopping_items = db.relationship("ShoppingItem", back_populates="household", cascade="all, delete-orphan")
     shopping_history = db.relationship("ShoppingHistory", back_populates="household", cascade="all, delete-orphan")
+    info_items = db.relationship("InfoItem", back_populates="household", cascade="all, delete-orphan")
 
     def regenerate_invite(self):
         self.invite_code = new_invite_code()
@@ -46,6 +48,9 @@ class Household(db.Model):
 
     def touch_shopping(self):
         self.shopping_version = (self.shopping_version or 0) + 1
+
+    def touch_info(self):
+        self.info_version = (self.info_version or 0) + 1
 
 
 class User(UserMixin, db.Model):
@@ -172,3 +177,57 @@ class ShoppingHistory(db.Model):
     last_used_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     household = db.relationship("Household", back_populates="shopping_history")
+
+
+class InfoItem(db.Model):
+    """A piece of household reference info: flight details, insurance docs, wifi password..."""
+
+    __tablename__ = "info_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+    household_id = db.Column(db.Integer, db.ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = db.Column(db.String(120), nullable=False)
+    notes = db.Column(db.Text)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    household = db.relationship("Household", back_populates="info_items")
+    created_by = db.relationship("User")
+    attachments = db.relationship(
+        "InfoAttachment", back_populates="item", cascade="all, delete-orphan", order_by="InfoAttachment.created_at"
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "notes": self.notes or "",
+            "attachments": [a.to_dict() for a in self.attachments],
+        }
+
+
+class InfoAttachment(db.Model):
+    __tablename__ = "info_attachments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey("info_items.id", ondelete="CASCADE"), nullable=False, index=True)
+    original_name = db.Column(db.String(255), nullable=False)
+    stored_name = db.Column(db.String(80), nullable=False, unique=True)
+    content_type = db.Column(db.String(80), nullable=False)
+    size = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    item = db.relationship("InfoItem", back_populates="attachments")
+
+    @property
+    def is_image(self) -> bool:
+        return self.content_type.startswith("image/")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.original_name,
+            "is_image": self.is_image,
+            "size": self.size,
+        }

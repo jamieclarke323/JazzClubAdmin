@@ -1,0 +1,12 @@
+{% if not items %}
+<div class="empty">
+  <p>📁 Nothing saved yet.</p>
+  <p class="muted small">Keep flight details, insurance docs, the wifi password, boiler serial number… anything you'll want to find again. Attach a screenshot so it's always to hand.</p>
+</div>
+{% endif %}
+
+<div class="infolist">
+  {% for item in items %}{% include "info/_item.html" %}{% endfor %}
+</div>
+
+<span hidden id="board-meta" data-version="{{ household.info_version }}"></span>

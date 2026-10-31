@@ -34,6 +34,7 @@ def create_app(config_object=Config) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_object)
     os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
 
     db.init_app(app)
     migrate.init_app(app, db, render_as_batch=True)
@@ -114,6 +115,7 @@ def create_app(config_object=Config) -> Flask:
     # --- Blueprints -------------------------------------------------------------
     from .auth import bp as auth_bp
     from .household import bp as household_bp
+    from .info import bp as info_bp
     from .shopping import bp as shopping_bp
     from .tasks import bp as tasks_bp
 
@@ -121,6 +123,7 @@ def create_app(config_object=Config) -> Flask:
     app.register_blueprint(household_bp)
     app.register_blueprint(tasks_bp)
     app.register_blueprint(shopping_bp)
+    app.register_blueprint(info_bp)
 
     @app.route("/")
     def index():
@@ -152,8 +155,11 @@ def create_app(config_object=Config) -> Flask:
     @app.errorhandler(404)
     @app.errorhandler(413)
     def handle_client_error(err):
+        description = getattr(err, "description", str(err))
+        if err.code == 413:
+            description = f"That upload is too large (limit {app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)} MB)."
         if _wants_json():
-            return jsonify(ok=False, error=getattr(err, "description", str(err))), err.code
+            return jsonify(ok=False, error=description), err.code
         return render_template("error.html", title="Oops", error=err), err.code
 
     @app.errorhandler(500)

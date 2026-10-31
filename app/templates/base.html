@@ -41,6 +41,10 @@
     <span>Shopping</span>
     <b class="badge" id="nav-shopping-count" {% if not nav_counts.shopping %}hidden{% endif %}>{{ nav_counts.shopping }}</b>
   </a>
+  <a href="{{ url_for('info.index') }}" class="tab {% if nav == 'info' %}active{% endif %}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    <span>Info</span>
+  </a>
   <a href="{{ url_for('household.home') }}" class="tab {% if nav == 'household' %}active{% endif %}">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
     <span>Household</span>

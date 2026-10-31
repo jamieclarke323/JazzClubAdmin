@@ -295,3 +295,86 @@ def test_csrf_enforced_when_enabled(app, client):
         token = sess["_csrf"]
     rv = client.post("/auth/login", data={"email": "x@example.com", "password": "nope", "csrf_token": token})
     assert rv.status_code == 401
+
+
+# --- info ---------------------------------------------------------------------------
+
+import io
+import os
+
+from app.models import InfoAttachment, InfoItem
+
+PNG_BYTES = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\rIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\xa7V\xbd\xfa\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def test_info_item_with_photo_upload_view_and_delete(app, client):
+    setup_household(client)
+    rv = client.post(
+        "/info",
+        data={
+            "title": "Spain flights",
+            "notes": "BA2712 · ref ABC123",
+            "files": [(io.BytesIO(PNG_BYTES), "flights.png"), (io.BytesIO(b"%PDF-1.4 fake"), "boarding.pdf")],
+        },
+        content_type="multipart/form-data",
+    )
+    assert rv.status_code == 200, rv.data
+    item = rv.get_json()["item"]
+    assert len(item["attachments"]) == 2
+    photo = next(a for a in item["attachments"] if a["is_image"])
+    att = db.session.get(InfoAttachment, photo["id"])
+    path = os.path.join(app.config["UPLOAD_DIR"], str(att.item.household_id), att.stored_name)
+    assert os.path.exists(path)
+
+    page = client.get("/info")
+    assert b"Spain flights" in page.data and b"ABC123" in page.data
+    served = client.get(f"/info/files/{att.id}/flights.png")
+    assert served.status_code == 200
+    assert served.data == PNG_BYTES
+    assert served.mimetype == "image/png"
+
+    rv = client.post(f"/info/{item['id']}", data={"title": "Spain flights (Sept)", "notes": ""}, content_type="multipart/form-data")
+    assert rv.get_json()["item"]["title"] == "Spain flights (Sept)"
+
+    client.post(f"/info/files/{att.id}/delete")
+    assert not os.path.exists(path)
+    assert db.session.get(InfoAttachment, att.id) is None
+
+    client.post(f"/info/{item['id']}/delete")
+    assert InfoItem.query.count() == 0
+    assert InfoAttachment.query.count() == 0
+
+
+def test_info_rejects_unsupported_files_and_requires_title(client):
+    setup_household(client)
+    rv = client.post("/info", data={"title": ""}, content_type="multipart/form-data")
+    assert rv.status_code == 400
+    rv = client.post(
+        "/info",
+        data={"title": "Virus", "files": [(io.BytesIO(b"MZ..."), "evil.exe")]},
+        content_type="multipart/form-data",
+    )
+    assert rv.status_code == 400
+    assert InfoItem.query.count() == 0
+
+
+def test_info_isolated_between_households(client):
+    setup_household(client, "a@example.com", "Alex", "House A")
+    rv = client.post(
+        "/info",
+        data={"title": "Wifi password", "files": [(io.BytesIO(PNG_BYTES), "wifi.png")]},
+        content_type="multipart/form-data",
+    )
+    item = rv.get_json()["item"]
+    att_id = item["attachments"][0]["id"]
+    logout(client)
+
+    setup_household(client, "b@example.com", "Bo", "House B")
+    assert b"Wifi password" not in client.get("/info").data
+    assert client.get(f"/info/files/{att_id}/wifi.png").status_code == 404
+    assert client.post(f"/info/{item['id']}/delete").status_code == 404
+    assert client.post(f"/info/files/{att_id}/delete").status_code == 404
+    assert client.get(f"/info/files/{att_id}/wifi.png").status_code == 404

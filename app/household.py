@@ -121,6 +121,11 @@ def leave():
         db.session.commit()
         flash(f"You've left {household.name}.", "info")
     else:
+        from .info import remove_file
+
+        for item in household.info_items:
+            for att in item.attachments:
+                remove_file(att)
         current_user.household_id = None
         db.session.flush()
         db.session.delete(household)

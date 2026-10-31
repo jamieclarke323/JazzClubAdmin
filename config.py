@@ -36,7 +36,9 @@ class Config:
 
     ALLOW_REGISTRATION = env_bool("ALLOW_REGISTRATION", True)
     CSRF_ENABLED = True
-    MAX_CONTENT_LENGTH = 64 * 1024
+    # Uploads (Info attachments). Photos from phones are typically 1-5 MB.
+    UPLOAD_DIR = os.environ.get("UPLOAD_DIR", str(BASE_DIR / "instance" / "uploads"))
+    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_UPLOAD_MB", "20")) * 1024 * 1024
 
 
 class TestConfig(Config):
@@ -48,3 +50,4 @@ class TestConfig(Config):
     PREFERRED_URL_SCHEME = "http"
     CSRF_ENABLED = False
     ALLOW_REGISTRATION = True
+    UPLOAD_DIR = str(BASE_DIR / "instance" / "test-uploads")
