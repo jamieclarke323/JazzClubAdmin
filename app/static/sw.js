@@ -1,5 +1,5 @@
 /* Minimal service worker: cache the app shell, network-first for pages, offline fallback. */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `shell-${VERSION}`;
 const OFFLINE_URL = "/offline";
 

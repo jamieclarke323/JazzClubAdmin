@@ -12,8 +12,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="{{ app_name }}">
   <link rel="manifest" href="{{ url_for('manifest') }}">
-  <link rel="icon" href="{{ static_url('icons/icon.svg') }}" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="{{ static_url('icons/icon-192.png') }}">
+  <link rel="icon" href="{{ static_url('icons/favicon.png') }}" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ static_url('icons/icon-180.png') }}">
   <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
 </head>
 <body class="{% block bodyclass %}{% endblock %}">
