@@ -108,14 +108,13 @@ Run the tests with `pip install pytest && pytest`.
 
 ### Updating
 
+Push to GitHub, then in a PythonAnywhere Bash console:
 ```bash
-cd ~/JazzClubAdmin
-git pull
-source .venv/bin/activate
-pip install -r requirements.txt
-flask --app wsgi db upgrade        # applies any new migrations; safe to re-run
+bash ~/JazzClubAdmin/scripts/pa_deploy.sh
 ```
-Then **Reload** on the Web tab.
+This pulls, installs any new dependencies, runs `flask db upgrade` and reloads the web app.
+(Equivalent manual steps: `git pull`, `pip install -r requirements.txt`, `flask --app wsgi db upgrade`,
+then **Reload** on the Web tab.)
 
 ### Backups
 
