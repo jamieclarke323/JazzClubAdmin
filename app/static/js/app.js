@@ -85,6 +85,12 @@
   App.openSheet = function (dialog) {
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
+    // Don't pop the keyboard: move initial focus to the sheet itself rather than the first input.
+    const body = dialog.querySelector(".sheet-body") || dialog;
+    if (!body.hasAttribute("tabindex")) body.setAttribute("tabindex", "-1");
+    body.focus({ preventScroll: true });
+    const active = document.activeElement;
+    if (active && active !== body && active.matches("input, textarea, select")) active.blur();
   };
   App.closeSheet = function (dialog) {
     if (dialog.open) dialog.close();

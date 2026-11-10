@@ -48,7 +48,6 @@
     const open = options.hidden;
     options.hidden = !open;
     moreBtn.setAttribute("aria-expanded", String(open));
-    if (!open) titleInput.focus();
   });
 
   function readForm(form) {
